@@ -19,7 +19,7 @@ connection.connect(err => {
 
 afterConnection = () => {
   connection.query(
-    'SELECT * FROM department;',
+    'SELECT * FROM employee;',
     function (err, results, fields) {
       if (err) {
         throw err
