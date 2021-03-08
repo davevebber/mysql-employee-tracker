@@ -46,7 +46,8 @@ function mainMenu() {
         'Add a role',
         'Update employee role',
         'Delete Employee',
-        'Delete a role'
+        'Delete a role',
+        'Delete a department'
       ]
     })
 
@@ -98,6 +99,11 @@ function mainMenu() {
         // delete role
         case 'Delete a role':
           deleteRole();
+          break;
+
+        // delete role
+        case 'Delete a department':
+          deleteDepartment();
           break;
       };
     });
@@ -469,7 +475,7 @@ function deleteEmployee() {
   ).then((conn) => {
 
     // select all employees
-    return  conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS employee FROM employee ORDER BY Employee ASC");
+    return conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS employee FROM employee ORDER BY Employee ASC");
   }).then((employees) => {
 
     // employee array
@@ -605,6 +611,99 @@ function deleteRole() {
 
           // if not confirmed, do not delete
           console.log(`\n ROLE '${answer.role}' NOT DELETED...\n `);
+
+          //back to main menu
+          mainMenu();
+        }
+
+      });
+    })
+  });
+};
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
+
+// delete department
+// ===========================================================
+// ===========================================================
+// ===========================================================
+function deleteDepartment() {
+
+  // department array
+  let deptArray = [];
+
+  // promisesql connection
+  promisemysql.createConnection(connectionProperties
+  ).then((conn) => {
+
+    // query all departments
+    return conn.query("SELECT id, name FROM department");
+  }).then((department) => {
+
+    // add departments to array
+    for (i = 0; i < department.length; i++) {
+      deptArray.push(department[i].name);
+    }
+
+    inquirer.prompt([{
+
+      // confirm delete
+      name: "continueDelete",
+      type: "list",
+      message: "*** WARNING *** Deleting a department will delete all roles and employees associated with the department. Do you want to continue?",
+      choices: ["NO", "YES"]
+    }]).then((answer) => {
+
+      // if not, go back to main menu
+      if (answer.continueDelete === "NO") {
+        mainMenu();
+      }
+
+    }).then(() => {
+
+      inquirer.prompt([{
+
+        // prompt user to select department
+        name: "dept",
+        type: "list",
+        message: "Which department would you like to delete?",
+        choices: deptArray
+      }, {
+
+        // confirm with user to delete
+        name: "confirmDelete",
+        type: "Input",
+        message: "Type the department name EXACTLY to confirm deletion of the department: "
+
+      }]).then((answer) => {
+
+        if (answer.confirmDelete === answer.dept) {
+
+          // if confirmed, get department id
+          let deptID;
+          for (i = 0; i < department.length; i++) {
+            if (answer.dept == department[i].name) {
+              deptID = department[i].id;
+            }
+          }
+
+          // delete department
+          connection.query(`DELETE FROM department WHERE id=${deptID};`, (err, res) => {
+            if (err) return err;
+
+            // confirm department has been deleted
+            console.log(`\n DEPARTMENT '${answer.dept}' DELETED...\n `);
+
+            // back to main menu
+            mainMenu();
+          });
+        }
+        else {
+
+          // do not delete department if not confirmed and go back to main menu
+          console.log(`\n DEPARTMENT '${answer.dept}' NOT DELETED...\n `);
 
           //back to main menu
           mainMenu();
