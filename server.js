@@ -44,7 +44,9 @@ function mainMenu() {
         'Add an employee',
         'Add a department',
         'Add a role',
-        'Update employee role'
+        'Update employee role',
+        'Delete Employee',
+        'Delete a role'
       ]
     })
 
@@ -87,6 +89,16 @@ function mainMenu() {
         case 'Update employee role':
           updateEmployee();
           break;
+
+        // delete employee
+        case 'Delete Employee':
+          deleteEmployee();
+          break;
+
+        // delete role
+        case 'Delete a role':
+          deleteRole();
+          break;
       };
     });
 };
@@ -95,6 +107,8 @@ function mainMenu() {
 // ===========================================================
 // ===========================================================
 // ===========================================================
+// function end
+
 viewEmployees = () => {
   const query = connection.query(
     "SELECT e.id, e.first_name, e.last_name, role.title, department.name AS department, role.salary, concat(m.first_name, ' ' ,  m.last_name) AS manager FROM employee e LEFT JOIN employee m ON e.manager_id = m.id INNER JOIN role ON e.role_id = role.id INNER JOIN department ON role.department_id = department.id ORDER BY ID ASC",
@@ -104,6 +118,10 @@ viewEmployees = () => {
       mainMenu();
     });
 };
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
 
 // view departments function
 // ===========================================================
@@ -118,6 +136,10 @@ viewDepartments = () => {
       mainMenu();
     });
 };
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
 
 // view roles function
 // ===========================================================
@@ -132,6 +154,8 @@ viewRoles = () => {
       mainMenu();
     });
 };
+
+// function end
 
 // add employee function
 // ===========================================================
@@ -246,6 +270,10 @@ function addEmployee() {
       });
   });
 };
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
 
 // add department function
 // ===========================================================
@@ -269,6 +297,10 @@ function addDepartment() {
     });
   });
 };
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
 
 // add role function
 // ===========================================================
@@ -336,6 +368,10 @@ function addRole() {
         });
     });
 };
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
 
 // update employee role function
 // ===========================================================
@@ -343,7 +379,7 @@ function addRole() {
 // ===========================================================
 function updateEmployee() {
 
-  let employeeArray = [];
+  let employeeArrayay = [];
   let roleArray = [];
 
   // promise mysql connection
@@ -364,7 +400,7 @@ function updateEmployee() {
 
     // show employees
     for (i = 0; i < employees.length; i++) {
-      employeeArray.push(employees[i].Employee);
+      employeeArrayay.push(employees[i].Employee);
       //console.log(value[i].name);
     }
 
@@ -377,7 +413,7 @@ function updateEmployee() {
         name: "employee",
         type: "list",
         message: "Who would you like to edit?",
-        choices: employeeArray
+        choices: employeeArrayay
       }, {
         // select updated role
         name: "role",
@@ -415,3 +451,170 @@ function updateEmployee() {
       });
   });
 };
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
+
+// delete employee function
+// ===========================================================
+// ===========================================================
+// ===========================================================
+function deleteEmployee() {
+
+  let employeeArray = [];
+
+  // promisesql connection
+  promisemysql.createConnection(connectionProperties
+  ).then((conn) => {
+
+    // select all employees
+    return  conn.query("SELECT employee.id, concat(employee.first_name, ' ' ,  employee.last_name) AS employee FROM employee ORDER BY Employee ASC");
+  }).then((employees) => {
+
+    // employee array
+    for (i = 0; i < employees.length; i++) {
+      employeeArray.push(employees[i].employee);
+    }
+
+    inquirer.prompt([
+      {
+        // prompt user to delete a employee
+        name: "employee",
+        type: "list",
+        message: "Who would you like to delete?",
+        choices: employeeArray
+      }, {
+        // confirm delete 
+        name: "confirm",
+        type: "list",
+        message: "Confirm deletion",
+        choices: ["NO", "YES"]
+      }]).then((answer) => {
+
+        if (answer.confirm == "YES") {
+          let employeeID;
+
+          // employee id
+          for (i = 0; i < employees.length; i++) {
+            if (answer.employee == employees[i].employee) {
+              employeeID = employees[i].id;
+            }
+          }
+
+          // delete employee
+          connection.query(`DELETE FROM employee WHERE id=${employeeID};`, (err, res) => {
+            if (err) return err;
+
+            // confirm deleted employee
+            console.log(`\n EMPLOYEE '${answer.employee}' DELETED...\n `);
+
+            // back to main menu
+            mainMenu();
+          });
+        }
+        else {
+
+          // if not confirmed, go back to main menu
+          console.log(`\n EMPLOYEE '${answer.employee}' NOT DELETED...\n `);
+
+          // back to main menu
+          mainMenu();
+        }
+      });
+  });
+};
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
+
+// Delete Role
+// ===========================================================
+// ===========================================================
+// ===========================================================
+function deleteRole() {
+
+  // Create role array
+  let roleArr = [];
+
+  // Create connection using promise-sql
+  promisemysql.createConnection(connectionProperties
+  ).then((conn) => {
+
+    // query all roles
+    return conn.query("SELECT id, title FROM role");
+  }).then((roles) => {
+
+    // add all roles to array
+    for (i = 0; i < roles.length; i++) {
+      roleArr.push(roles[i].title);
+    }
+
+    inquirer.prompt([{
+      // confirm to continue to select role to delete
+      name: "continueDelete",
+      type: "list",
+      message: "*** WARNING *** Deleting role will delete all employees associated with the role. Do you want to continue?",
+      choices: ["NO", "YES"]
+    }]).then((answer) => {
+
+      // if not, go to main menu
+      if (answer.continueDelete === "NO") {
+        mainMenu();
+      }
+
+    }).then(() => {
+
+      inquirer.prompt([{
+        // prompt user of of roles
+        name: "role",
+        type: "list",
+        message: "Which role would you like to delete?",
+        choices: roleArr
+      }, {
+        // confirm to delete role by typing role exactly
+        name: "confirmDelete",
+        type: "Input",
+        message: "Type the role title EXACTLY to confirm deletion of the role"
+
+      }]).then((answer) => {
+
+        if (answer.confirmDelete === answer.role) {
+
+          // get role id of of selected role
+          let roleID;
+          for (i = 0; i < roles.length; i++) {
+            if (answer.role == roles[i].title) {
+              roleID = roles[i].id;
+            }
+          }
+
+          // delete role
+          connection.query(`DELETE FROM role WHERE id=${roleID};`, (err, res) => {
+            if (err) return err;
+
+            // confirm role has been added 
+            console.log(`\n ROLE '${answer.role}' DELETED...\n `);
+
+            //back to main menu
+            mainMenu();
+          });
+        }
+        else {
+
+          // if not confirmed, do not delete
+          console.log(`\n ROLE '${answer.role}' NOT DELETED...\n `);
+
+          //back to main menu
+          mainMenu();
+        }
+
+      });
+    })
+  });
+};
+// ===========================================================
+// ===========================================================
+// ===========================================================
+// function end
