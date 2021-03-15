@@ -13,9 +13,9 @@ VALUES
     (2, 'Sales Person', 75000, 1),    
     (3, 'Lead Engineer', 110000, 2),
     (4, 'Software Engineer', 95000, 2),
-    (5, 'Legal Team Lead', 100000, 3),
-    (6, 'Lawyer', 90000, 3),   
-    (7, 'Accountant', 65000, 4);
+    (5, 'Legal Team Lead', 100000, 4),
+    (6, 'Lawyer', 90000, 4),   
+    (7, 'Accountant', 65000, 3);
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
 VALUES
